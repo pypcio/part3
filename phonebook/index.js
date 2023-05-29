@@ -1,6 +1,14 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 app.use(express.json());
+
+morgan.token("data", function (req, res) {
+  return JSON.stringify(req.body);
+});
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :data")
+);
 let persons = [
   {
     id: "36qsbcf",
@@ -34,8 +42,6 @@ const generateId = () => {
 };
 app.post("/api/persons", (request, response) => {
   const body = request.body;
-  // const checkName = persons.find((p) => p.name === body.name);
-  // console.log("checked", checkName);
   if (!body.name || !body.number) {
     return response.status(400).json({
       error: "name or number is missing",
@@ -83,6 +89,11 @@ app.get("/api/info", (req, res) => {
     `<p>Phonebook has info for ${persons.length} people</p> <br/> <p>${time}</p>`
   );
 });
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" });
+};
+app.use(unknownEndpoint);
 const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
